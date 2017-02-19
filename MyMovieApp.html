@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Movie App</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" href="custom.css">
+</head>
+
+<body>
+
+	 	<div data-role="page" data-theme="b" id="splash" style="background-color: #33CCCC;">
+        <div class="splash"></div>
+    </div>
+
+    <div data-role="page" id="movie-list" data-overlay-theme="b">
+		    <div data-role="header">
+						<h1>Home</h1>
+						<a href="#myPopupDialog" data-rel="popup" class="ui-btn ui-corner-all ui-shadow ui-icon-grid " data-position-to="window">Special</a>
+						<div data-role="popup" id="myPopupDialog" data-overlay-theme="b">
+							<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+							<center><p><strong>Coming Soon !!</strong></p></center>
+							<img src="http://s.movie.as/images/p/411986_m1485477617.jpg" style="width:800px;height:50%;">
+						</div>
+					
+		    </div><!-- /header -->
+		    <div data-role="content">
+		      <input type="search" name="keyword" id="search" value="" placeholder="search movie here">
+					<input type="button" onclick="searchItems($('#search').val())" value="Search">
+					<ul data-role="listview" data-inset="true" id="result">
+					</ul>
+		    </div><!-- /content -->
+		   
+    </div><!-- /page -->
+		<script type="text/javascript">
+				var globalID;
+				$(function() {
+            console.log('setTimeout');
+            setTimeout(hideSplash, 2200);
+        });
+
+        function hideSplash() {
+            $.mobile.changePage("#movie-list", "fade");
+        }
+
+				function searchItems(keyword){
+					 console.log(keyword);
+						//show page loading
+					 if(keyword != ""){
+							$.mobile.loading( "show", {
+								text: "Loading...",
+								textVisible: true,
+								theme: "b",
+								html: ""
+						});
+					 }
+
+						$.getJSON('http://www.omdbapi.com/?s=' + keyword, function(data){
+								 $('#result').empty();
+								 $.each(data["Search"], function(index, element) {
+				            var url = "#movie-detail";
+										var img = element.Poster;
+				            var listitem = '<li data-icon="info" id = "' + element.imdbID +'"><a href="' + url + '" data-transition="slide"><img src="'+ img +'" height="80" width="80"><h1>' + element.Title + '</h1><p>Year ' + element.Year + '</p></a></li>';
+										$('#result').append(listitem);
+				            $('#result').listview('refresh');
+								});
+								$.mobile.loading( "hide" ); // hide when load data successfull   
+							}).error(function() { 
+										console.log("The service is unavailable.");
+										$.mobile.loading( "hide" );
+										$.mobile.changePage("#error", "fade");		 
+							});
+				}
+		</script>
+
+    <div data-role="page" id="movie-detail">
+		    <div data-role="header">
+					<a href="#" class="ui-btn ui-corner-all ui-shadow ui-icon-arrow-l ui-btn-icon-left" data-rel="back">Back</a>
+		      <h1>More Detail</h1>
+					<a href="#popupTip" data-rel="popup" class="ui-btn ui-corner-all ui-shadow ui-icon-info ui-btn-icon-left" data-position-to="window">Tip</a>
+						<div data-role="popup" id="popupTip" data-overlay-theme="b">
+							 <p><strong>Touch image</strong> to view large size.</p>
+						</div>
+		    </div><!-- /header -->
+		    <div data-role="content">
+						<!--<div id="poster"></div>-->
+						<a href="#popupPic" data-rel="popup" id="popupLink" data-position-to="window" data-transition="fade"></a>
+						<div data-role="popup" id="popupPic" data-overlay-theme="b" data-theme="b" data-corners="false"></div>
+						<div id="title"></div>
+						<textarea cols="40" rows="8" name="plot" id="plot" value=""></textarea>
+						<label for="actor">Actor</label>
+						<textarea cols="40" rows="8" name="actor" id="actor" value=""></textarea>
+						<label for="award">Awards</label>
+						<textarea cols="40" rows="8" name="award" id="award" value=""></textarea>
+						<label for="rated">Rated</label>
+						<input type="text" name="rated" id="rated" value="">
+						<label for="imdbRating">imdb rating</label>
+						<input type="text" name="imdbRating" id="imdbRating" value="">
+						<label for="itemid">Runtime</label>
+						<input type="text" name="runtime" id="runtime" value="">
+						<label for="desc">Genre</label>
+						<input type="text" name="genre" id="genre" value="">
+						<label for="year">Director</label>
+						<input type="text" name="director" id="director" value="">
+						<label for="writer">Writer</label>
+						<input type="text" name="writer" id="writer" value="">
+
+		    </div><!-- /content -->
+
+    </div><!-- /page -->
+		<div data-role="page" id="error">
+		    <div data-role="header">
+					<a href="#movie-list" class="ui-btn">Go Home</a>
+		      <h1>Sorry !!</h1>
+		    </div><!-- /header -->
+		    <div data-role="content">
+						<h4>The service is unavailable.</h4>
+		    </div><!-- /content -->
+    </div><!-- /page -->
+
+				<script type="text/javascript">
+						$('#result').on('click', 'li', function() {
+							 console.log("clicked "+ this.id); // id of clicked li
+							 globalID = this.id;
+							 console.log("Gobal "+ globalID);
+					  });
+            $(document).on("pageshow", "#movie-detail", function() {
+                getDetail(globalID);
+            });
+
+            function getDetail(id) {
+							console.log("detail "+id);
+							//page load
+							$.mobile.loading( "show", {
+										text: "Loading...",
+										textVisible: true,
+										theme: "b",
+										html: ""
+							});
+							$.getJSON('http://www.omdbapi.com/?i=' + id, function(data) {
+										//$('#poster').empty();
+										$('#popupPic').empty();
+										$('#popupLink').empty();
+										$('#title').empty();
+										$('#runtime').val(data.Runtime).show();
+										$('#genre').val(data.Genre).show();
+										$('#director').val(data.Director).show();
+										$('#writer').val(data.Writer).show();
+										$('#plot').val(data.Plot).show();
+										$('#actor').val(data.Actors).show();
+										$('#rated').val(data.Rated).show();
+										$('#imdbRating').val(data.imdbRating).show();
+										$('#award').val(data.Awards).show();
+										//var pos = '<center><img src= "' + data.Poster + '" height="250" width="290"></center>';
+										//$('#poster').append(pos);
+										var title = '<center><h4>' + data.Title + '</h4></center>';
+										$('#title').append(title);
+										$.mobile.loading( "hide" ); // hide page load
+
+										//image popup 
+										var close = '<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>'
+										var pop = '<img src= "' + data.Poster + '"  style="width:800px;height:50%;">';
+										$('#popupPic').append(close);
+										$('#popupPic').append(pop);
+										var popLink = '<center><img class="popphoto" src="' + data.Poster + '" style="width:60%"></center>';
+										$('#popupLink').append(popLink);								
+
+                }).error(function() { 
+										console.log("The service is unavailable.");
+										$.mobile.loading( "hide" );
+										$.mobile.changePage("#error", "fade");		 
+								});
+            }
+
+        </script>
+</body>
+</html>
